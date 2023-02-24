@@ -11,4 +11,10 @@ We discuss a slightly modified approach to the naive solution which solves this 
 
 Let us havev a brief look at semaphores before diving into the solution.
 
-#Semaphores
+# Semaphores
+
+`Semaphore` is another mechanism which is used for achieving thread and/or process synchronisation. `Spinnlocks` are useful when the lock has to be acquired for a short time, semaphores should be used whenever we wish to acquire the lock for an extended period of time. 
+
+There are two types of semaphores briefly:
+* `Mutex or Binary Semaphore`
+* `Counting Semaphore`
