@@ -26,4 +26,40 @@ struct semaphore{
   raw_spinlock_t lock;
   unsigned int count;
   struct list_head wait_list;
-};```
+};
+```
+
+The struct defines three things:
+* lock: Conventionally, all modern architectures provide an implementation of spinlock which forms the basis of every type of synchronisation primitive. (NB: raw_spinlock_t does NOT mean the same as spinlock)
+* count: This variable stores the count of the semaphore
+* wait_list: This stores a list of processes waiting to acquire the lock
+
+The Linux kernel provides the following API to manipulate `semaphores`:
+```
+void down(struct semaphore *sem);
+void up(struct semaphore *sem);
+int  down_interruptible(struct semaphore *sem);
+int  down_killable(struct semaphore *sem);
+int  down_trylock(struct semaphore *sem);
+int  down_timeout(struct semaphore *sem, long jiffies);
+```
+
+We will only look at the working of the down and up functions here, as they are the only methods we would be using in our discussion.
+
+The `down` function is used to acquiring the semaphore and the `up` function is used to release the semaphore.
+
+Linux implements the down function as follows:
+```C
+void down(struct semaphore *sem)
+{
+        unsigned long flags;
+
+        raw_spin_lock_irqsave(&sem->lock, flags);
+        if (likely(sem->count > 0))
+                sem->count--;
+        else
+                __down(sem);
+        raw_spin_unlock_irqrestore(&sem->lock, flags);
+}
+EXPORT_SYMBOL(down);
+```
