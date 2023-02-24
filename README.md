@@ -9,7 +9,7 @@ The naive solution to the problem requires us to keep the readers at higher prio
 
 We discuss a slightly modified approach to the naive solution which solves this deficit and also achieves mutual exlusion. We procees to look at slight modifications of this approach to improve the execution speed of the program and we end by looking at how Linux solves this issue (it uses a special synchronisation primitive, the 'readers/writers semaphore'.
 
-Let us havev a brief look at semaphores before diving into the solution.
+Let us havev a brief look at `semaphores` before diving into the solution.
 
 # Semaphores
 
@@ -19,7 +19,7 @@ There are two types of semaphores broadly:
 * `Mutex or Binary Semaphore` : Can have only two values viz. 0 and 1
 * `Counting Semaphore` : Can have any non-negative value
 
-Let us look at how semaphores are implemented in Linux.
+Let us look at how `semaphores` are implemented in Linux.
 
 ```C
 struct semaphore{
@@ -30,7 +30,7 @@ struct semaphore{
 ```
 
 The struct defines three things:
-* `lock`: Conventionally, all modern architectures provide an implementation of spinlock which forms the basis of every type of synchronisation primitive. (NB: raw_spinlock_t does NOT mean the same as spinlock)
+* `lock`: Conventionally, all modern architectures provide an implementation of `spinlock` which forms the basis of every type of synchronisation primitive. (NB: raw_spinlock_t does NOT mean the same as spinlock)
 * `count`: This variable stores the count of the semaphore
 * `wait_list`: This stores a list of processes waiting to acquire the lock
 
@@ -76,7 +76,7 @@ void down(struct semaphore *sem)
         //This is crucial to gurantee the correctness of a semaphore
 }
 ```
-We acquire a spinlock at the start of the procedure to ensure the atomicity of the entire process. Interrupts are disabled and the processor might disable the memory bus in case of a multicore system. The `if-else` clause checks whether the lock can be acquired, if it can be, we reduce the count of the semaphore and acquire the semaphore; if not, then another process `__down` is called to send the process to sleep state and add the process to the list of waiting processes.
+We acquire a `spinlock` at the start of the procedure to ensure the atomicity of the entire process. Interrupts are disabled and the processor might disable the memory bus in case of a multicore system. The `if-else` clause checks whether the lock can be acquired, if it can be, we reduce the count of the semaphore and acquire the semaphore; if not, then another process `__down` is called to send the process to sleep state and add the process to the list of waiting processes.
 
 The `up` function's code is very similar to the code of the `down` function presented above.
 ```C
@@ -100,5 +100,65 @@ void up(struct semaphore *sem)
                 
         raw_spin_unlock_irqrestore(&sem->lock, flags);
         //Leaving the spinlock
+}
+```
+`Semaphores` have to be initialised at the time of creation.
+
+# The Naive solution:
+In our solution, we define 4 functions:
+```
+enterReader(pID)
+exitReader(pID)
+enterWriter(pID)
+exitWriter(pID)
+```
+We would be using two `Mutex` here,
+* `read_mutex`: This Mutex would ensure only one Reader reads and changes the value of the variable count.
+* `write_mutex`: This Mutex would ensure that no Reader can enter the critical section once the Writer enters it.
+A shared variable `rCount` would store the numbers of readers currently in their critical section.
+
+Let us analyse the codes for the reader:
+```C
+void enterReader(pid reader){
+  wait(read_mutex, reader);
+  
+  ++rCount; //Incrementing the count of readers inside the Critical Section
+  if(rCount == 1) wait(write_mutex, reader);
+  
+  signal(read_mutex);
+  return;
+}
+```
+
+```C
+void exitReader(pid reader){
+  wait(read_mutex, reader);
+  
+  --rCount;
+  if(count == 0) signal(write_mutex);
+  
+  signal(read_mutex);
+  return;
+}
+```
+
+```C
+void enterWriter(pid writer){
+  wait(read_mutex, writer);
+  //Now no reader can enter as the read_mutex would be freed by the Writer only upon its exit
+  wait(write_mutex, writer);
+  //If a process can enter here, this implies that count was equal to 0
+  //Hence, it is safe to enter the critical region now
+  
+  return;
+}
+```
+
+```C
+void exitWriter(pid Writer){
+  signal(read_mutex);
+  signal(write_mutex);
+  
+  return;
 }
 ```
