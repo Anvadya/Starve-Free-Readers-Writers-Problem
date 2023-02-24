@@ -110,14 +110,21 @@ In our solution, we define 4 functions:
 enterReader(pID)
 exitReader(pID)
 enterWriter(pID)
-exitWriter(pID)
 ```
 We would be using two `Mutex` here,
 * `read_mutex`: This Mutex would ensure only one Reader reads and changes the value of the variable count.
 * `write_mutex`: This Mutex would ensure that no Reader can enter the critical section once the Writer enters it.
 A shared variable `rCount` would store the numbers of readers currently in their critical section.
 
+Initialisation of the mutex:
+```
+read_mutex  = new Mutex(1);
+write_mutex = new Mutex(1);
+```
+
 Let us analyse the codes for the reader:
+
+The reader needs to call enterReader function before entering its critical region
 ```C
 void enterReader(pid reader){
   wait(read_mutex, reader);
@@ -130,6 +137,7 @@ void enterReader(pid reader){
 }
 ```
 
+The reader needs to call exitReader function after executing its critical region
 ```C
 void exitReader(pid reader){
   wait(read_mutex, reader);
@@ -142,23 +150,26 @@ void exitReader(pid reader){
 }
 ```
 
+The Writer needs to call this function before entering
 ```C
 void enterWriter(pid writer){
-  wait(read_mutex, writer);
-  //Now no reader can enter as the read_mutex would be freed by the Writer only upon its exit
   wait(write_mutex, writer);
   //If a process can enter here, this implies that count was equal to 0
   //Hence, it is safe to enter the critical region now
+  //(No other reader or writer can enter the critical section now)
+  
+  /* 
+    CRITICAL REGION
+  */
+  
+  signal(write_mutex);
+  //Freeing the write_mutex so that other readers/writers may run
   
   return;
 }
 ```
 
-```C
-void exitWriter(pid Writer){
-  signal(read_mutex);
-  signal(write_mutex);
-  
-  return;
-}
-```
+We can clearly see a major drawback in this solution, let us assume that Readers keep on coming, the Writer will have to wait until there is no reader in the critical region but readers are given entry as soon as they reach, i.e. they are kept at priority (this is done because having multiple readers simultaneously reading the records makes efficient use of parallellism and thus increases the performance of the system) the Writer might never get a chance to enter the critical region or it enters the critical section after a long period of time which might be an unwanted consequence of this solution.
+
+# Starve Free Solution
+
