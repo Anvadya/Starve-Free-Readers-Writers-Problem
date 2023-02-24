@@ -76,3 +76,29 @@ void down(struct semaphore *sem)
         //This is crucial to gurantee the correctness of a semaphore
 }
 ```
+We acquire a spinlock at the start of the procedure to ensure the atomicity of the entire process. Interrupts are disabled and the processor might disable the memory bus in case of a multicore system. The `if-else` clause checks whether the lock can be acquired, if it can be, we reduce the count of the semaphore and acquire the semaphore; if not, then another process `__down` is called to send the process to sleep state and add the process to the list of waiting processes.
+
+The `up` function's code is very similar to the code of the `down` function presented above.
+```C
+void up(struct semaphore *sem)
+{
+        unsigned long flags;
+        //performs the same role as down, this is sent to the raw_spin_lock functions, in case there is any
+        //error in acquiring the spinlock, the appropriate flags are set in the flags variable
+
+        raw_spin_lock_irqsave(&sem->lock, flags);
+        //Acquiring the spinlock to gurantee atomicity
+        
+        if (likely(list_empty(&sem->wait_list)))
+                //Checking if there is no process who is waiting on this semaphore
+                //If none is waiting then we increment the count of the semaphore
+                sem->count++;
+        else
+                //If there are processes sleeping on the semaphore, then we must call the __up function
+                //The __up function will wake a process who is sleeping on the semaphore
+                __up(sem);
+                
+        raw_spin_unlock_irqrestore(&sem->lock, flags);
+        //Leaving the spinlock
+}
+```
