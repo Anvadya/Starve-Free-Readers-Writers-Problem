@@ -128,11 +128,17 @@ The reader needs to call enterReader function before entering its critical regio
 ```C
 void enterReader(pid reader){
   wait(read_mutex, reader);
+  //Ensuring only one reader enters this section at once
   
   ++rCount; //Incrementing the count of readers inside the Critical Section
+  
   if(rCount == 1) wait(write_mutex, reader);
+  //Ensuring the writer does not enter after any reader has entered
+  //Done only once to avoid unncecessary system calls which reduce the performance
   
   signal(read_mutex);
+  //Freeing the read_mutex so other processes can do their work
+  
   return;
 }
 ```
@@ -141,12 +147,20 @@ The reader needs to call exitReader function after executing its critical region
 ```C
 void exitReader(pid reader){
   wait(read_mutex, reader);
+  //Ensuring only one reader enters this section at once
   
   --rCount;
+  //Reducing the number of readers in their critical region(as one process has left it)
   
   signal(read_mutex);
+  //Freeing the read_mutex so other processes can do their work
   
   if(count == 0) signal(write_mutex);
+  //This statement would allow the writer to enter its critical region
+  //This statement is after the signal(read_mutex) to ensure that readers at a higher priority
+  //Consider the sequence RWRR, where all WRR come at once (R represents a Reader, W represents a Writer)
+  //If signal was inside the locked region, the Writer would run after the first R even though 2 more R were waiting on it
+  //As the signal is outside, the Writer can enter its critical region only if there are no readers ready to enter the critical region
     
   return;
 }
