@@ -105,7 +105,7 @@ void up(struct semaphore *sem)
 `Semaphores` have to be initialised at the time of creation.
 
 # The Naive solution:
-In our solution, we define 4 functions:
+In our solution, we define 3 functions:
 ```
 enterReader(pID)
 exitReader(pID)
@@ -173,3 +173,54 @@ We can clearly see a major drawback in this solution, let us assume that Readers
 
 # Starve Free Solution
 
+The solution is largely the same. We define the same 3 functions as above, we introduce a new `entry_mutex` whose value is initialised to 1.
+
+The reader needs to call enterReader function before entering its critical region
+```C
+void enterReader(pid reader){
+  wait(entry_mutex, reader);
+  wait(read_mutex, reader);
+  
+  ++rCount; //Incrementing the count of readers inside the Critical Section
+  if(rCount == 1) wait(write_mutex, reader);
+  
+  signal(read_mutex);
+  signal(entry_mutex);
+  return;
+}
+```
+
+The reader needs to call exitReader function after executing its critical region
+```C
+void exitReader(pid reader){
+  wait(read_mutex, reader);
+  
+  --rCount;
+  if(count == 0) signal(write_mutex);
+  
+  signal(read_mutex);
+  return;
+}
+```
+
+The Writer needs to call this function before entering
+```C
+void enterWriter(pid writer){
+  wait(entry_mutex, writer);
+  wait(write_mutex, writer);
+  //If a process can enter here, this implies that count was equal to 0
+  //Hence, it is safe to enter the critical region now
+  //(No other reader or writer can enter the critical section now)
+  
+  signal(entry_mutex);
+  
+  /* 
+    CRITICAL REGION
+  */
+  
+  signal(write_mutex);
+  //Freeing the write_mutex so that other readers/writers may run
+  
+  return;
+}
+```
