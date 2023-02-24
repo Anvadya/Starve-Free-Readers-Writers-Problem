@@ -15,6 +15,15 @@ Let us havev a brief look at semaphores before diving into the solution.
 
 `Semaphore` is another mechanism which is used for achieving thread and/or process synchronisation. `Spinnlocks` are useful when the lock has to be acquired for a short time, semaphores should be used whenever we wish to acquire the lock for an extended period of time. 
 
-There are two types of semaphores briefly:
-* `Mutex or Binary Semaphore`
-* `Counting Semaphore`
+There are two types of semaphores broadly:
+* `Mutex or Binary Semaphore` : Can have only two values viz. 0 and 1
+* `Counting Semaphore` : Can have any non-negative value
+
+Let us look at how semaphores are implemented in Linux.
+
+```C
+struct semaphore{
+  raw_spinlock_t lock;
+  unsigned int count;
+  struct list_head wait_list;
+};```
