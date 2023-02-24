@@ -143,9 +143,11 @@ void exitReader(pid reader){
   wait(read_mutex, reader);
   
   --rCount;
-  if(count == 0) signal(write_mutex);
   
   signal(read_mutex);
+  
+  if(count == 0) signal(write_mutex);
+    
   return;
 }
 ```
@@ -196,9 +198,11 @@ void exitReader(pid reader){
   wait(read_mutex, reader);
   
   --rCount;
-  if(count == 0) signal(write_mutex);
   
   signal(read_mutex);
+  
+  if(count == 0) signal(write_mutex);
+  
   return;
 }
 ```
