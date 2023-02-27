@@ -257,3 +257,12 @@ When Reader 1 comes in, it gets gold of the entry_mutex, sets the `rCount` to 1 
 When the Writer comes in, it succesfully gets hold of the `entry_mutex` but gets blocked on the `write_mutex` (as it has been blocked by Reader 1). Hence, writer 1 is now waiting on the `write_mutex`.
 Now Reader 3 comes in and tries to acquire `entry_mutex`, this request is denied as the Writer currently holds the `mutex`, so Reader 3 is now waiting on the `entry_mutex`. Reader 4 meets the exact same fate as Reader 3 and waits on the `entry_mutex`.
 After some time, Reader 1 and 2 exit their critical regions and call the `exitReader` procedure. The last reader to exit unlocks the `write_mutex`, which in turn wakes up the writer who proceeds to enter its critical region. Before entering the critical region, the writer leaves the `entry_mutex` thereby waking Reader 3, but after incrementing `rCount` to 1, Reader 3 fails to acquire the `write_mutex` as it is currently in posession of the Writer, thereby ensuring Mutual Exclusion between the Readers and Writers. The remaining readers can resume their work once the Writer exits the critical region and unlocks the `write_mutex`.
+
+# Correctness of the Solution
+Any starve-free solution must meet three criterias, viz. _Mutual Exclusion_, _Bounded Waiting_ and _Progress_. Let us look at each of them:
+## Mutual Exclusion:
+The `entry_mutex` and `write_mutex` ensure Mutual Exclusion. The `entry_mutex` ensures that only 1 reader is reading/writing the rCount variable at a time, thereby avoiding race conditions. The `write_mutex` ensures that the writer should not enter its critical region while readers are still working in their critical regions and also ensures that while the readers do not enter their critical region while the writer is working in its critical region.
+## Bounded Waiting:
+The `entry_mutex` ensures that all the readers who come after the writer will enter their critical regions only after the writer finishes its work. Therefore, there is a guarantee that writers will not wait till eternity before entering their critical regions. Similar arguments also ensure that no Reader needs to wait endlessly before entering its critical region.
+## Progress:
+The structure of the code ensures that no deadlock can exist and therefore progress is guaranteed.
