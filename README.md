@@ -242,3 +242,9 @@ void enterWriter(pid writer){
   return;
 }
 ```
+
+Let us spend some time in analysing why this particular variation can deal with stravation. Assume that there are 4 readers and 1 writer, they come in the sequence RRWRR (here `R` represents a Reader and `W` represents a Writer).
+When Reader 1 comes in, it gets gold of the entry_mutex, sets the `rCount` to 1 and blocks the `write_mutex`. Reader 1 then enters its critical region. Reader 2 does something similar (except blocking the `write_mutex` as the `rCount` has been set to 2 now).
+When the Writer comes in, it succesfully gets hold of the `entry_mutex` but gets blocked on the `write_mutex` (as it has been blocked by Reader 1). Hence, writer 1 is now waiting on the `write_mutex`.
+Now Reader 3 comes in and tries to acquire `entry_mutex`, this request is denied as the Writer currently holds the `mutex`, so Reader 3 is now waiting on the `entry_mutex`. Reader 4 meets the exact same fate as Reader 3 and waits on the `entry_mutex`.
+After some time, Reader 1 and 2 exit their critical regions and call the `exitReader` procedure. The last reader to exits frees the `write_mutex`, which in turn wakes up the writer who proceeds to enter its critical region. Before entering the critical region, the writer leaves the `entry_mutex` thereby waking Reader 3, but after incrementing `rCount` to 1, Reader 3 fails to acquire the `write_mutex` as it is currently in posession of the Writer, thereby ensuring Mutual Exclusion between the Readers and Writers. The remaining readers can resume their work once the Writer exits the critical region and unlocks the `write_mutex`.
