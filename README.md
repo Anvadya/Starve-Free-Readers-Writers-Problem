@@ -266,3 +266,10 @@ The `entry_mutex` and `write_mutex` ensure Mutual Exclusion. The `entry_mutex` e
 The `entry_mutex` ensures that all the readers who come after the writer will enter their critical regions only after the writer finishes its work. Therefore, there is a guarantee that writers will not wait till eternity before entering their critical regions. Similar arguments also ensure that no Reader needs to wait endlessly before entering its critical region.
 ## Progress:
 The structure of the code ensures that no deadlock can exist and therefore progress is guaranteed.
+
+# Optimisations
+Accessing a `semaphore` is a long task as the Operating System has to be called by using the `trap` instruction. This means that a significant overhead is associated with every `semaphore` operation. The code presented above is correct but one might argue that it is not very efficient as the Reader needs to access two semaphores (`entry_mutex` and `read_mutex`) every time it needs to enter the critical region. In a scenario where multiple readers might need to access their critical region (for example, in a server's database) this might prove to be detrimental to the database's performance. 
+
+There exists a way to refactor the above code such that it uses only one `semaphore` for every reader who wishes to enter its critical region, thereby greatly increasing performance. The crux of the idea is to absorb the `read_mutex` into the `entry_mutex` (notice that these two are used consecutively in the `enterReader` function) and using an additional `out_mutex` semaphore. Some additional variables have to introduced, but the overall overhead of accessing variables is almost negligible in comparison to that of `semaphore`. The exact details of the same can be found in the References (present at the bottom).
+
+# rwSemaphores
