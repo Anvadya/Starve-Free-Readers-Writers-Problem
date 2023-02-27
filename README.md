@@ -272,4 +272,21 @@ Accessing a `semaphore` is a long task as the Operating System has to be called 
 
 There exists a way to refactor the above code such that it uses only one `semaphore` for every reader who wishes to enter its critical region, thereby greatly increasing performance. The crux of the idea is to absorb the `read_mutex` into the `entry_mutex` (notice that these two are used consecutively in the `enterReader` function) and using an additional `out_mutex` semaphore. Some additional variables have to introduced, but the overall overhead of accessing variables is almost negligible in comparison to that of `semaphore`. The exact details of the same can be found in the References (present at the bottom).
 
-# rwSemaphores
+# R/W Semaphores
+
+The `Linux kernel` provides a synchronisation primitive known as the `Readers/Writers semaphore`. We will have a brief look at the internal organisation of this `semaphore` and then look at the API it provides to the user.
+
+Internally, the `R/W semaphore` also uses `spinlock` (remember that all synchronisation primitives in Linux internally use `raw_spinlock`). Theoretically, the functioning is same as we discussed above, the `semaphore` is provided to increase the ease with which softwares can be written. Since errors in writing the code for `semaphores` are difficult to catch and often lead to unpredictable behaviour, the use of a pre-written library makes the development process more convenient.
+
+The Linux kernel provides following primary [API](https://en.wikipedia.org/wiki/Application_programming_interface) to manipulate `reader/writer semaphores`:
+
+* `void down_read(struct rw_semaphore *sem)` - lock for reading;
+* `int down_read_trylock(struct rw_semaphore *sem)` - try lock for reading;
+* `void down_write(struct rw_semaphore *sem)` - lock for writing;
+* `int down_write_trylock(struct rw_semaphore *sem)` - try lock for writing;
+* `void up_read(struct rw_semaphore *sem)` - release a read lock;
+* `void up_write(struct rw_semaphore *sem)` - release a write lock;
+
+Hence now the reader just need to call the `down_read` function before entering the critical section and call `up_read` after finishing its work in the critical section. Similarly, the writer needs to call the `down_write` function before entering its critical section and call the `up_write` function after exiting the critical section. The `down_read_trylock` returns whether the lock is available or not, in case the lock is unavailable the process might try doing some other work rather than going to a wait state on the `semaphore`, `down_write_trylock` achieves the same thing for the writers. 
+
+These functions are provided as a part of the system call library provided by the OS.
