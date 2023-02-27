@@ -9,7 +9,7 @@ The naive solution to the problem requires us to keep the readers at higher prio
 
 We discuss a slightly modified approach to the naive solution which solves this deficit and also achieves mutual exlusion. We procees to look at slight modifications of this approach to improve the execution speed of the program and we end by looking at how Linux solves this issue (it uses a special synchronisation primitive, the 'readers/writers semaphore'.
 
-Let us havev a brief look at `semaphores` before diving into the solution.
+Let us have a brief look at `semaphores` before diving into the solution.
 
 # Semaphores
 
