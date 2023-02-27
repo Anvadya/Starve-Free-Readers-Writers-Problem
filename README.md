@@ -291,7 +291,7 @@ Hence now the reader just need to call the `down_read` function before entering 
 
 These functions are provided as a part of the system call library provided by the OS.
 
-# Refernces:
+# References:
 * Modern Operating Systems by Andrew S. Tanenbaum
 * [Linux Source Code](https://github.com/torvalds/linux/tree/16f73eb02d7e1765ccab3d2018e0bd98eb93d973)
 * [Faster Fair Solution to the Reader-Writer Problem](https://arxiv.org/abs/1309.4507)
