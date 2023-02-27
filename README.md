@@ -290,3 +290,8 @@ The Linux kernel provides following primary [API](https://en.wikipedia.org/wiki/
 Hence now the reader just need to call the `down_read` function before entering the critical section and call `up_read` after finishing its work in the critical section. Similarly, the writer needs to call the `down_write` function before entering its critical section and call the `up_write` function after exiting the critical section. The `down_read_trylock` returns whether the lock is available or not, in case the lock is unavailable the process might try doing some other work rather than going to a wait state on the `semaphore`, `down_write_trylock` achieves the same thing for the writers. 
 
 These functions are provided as a part of the system call library provided by the OS.
+
+# Refernces:
+* Modern Operating Systems by Andrew S. Tanenbaum
+* [Linux Source Code](https://github.com/torvalds/linux/tree/16f73eb02d7e1765ccab3d2018e0bd98eb93d973)
+* [Faster Fair Solution to the Reader-Writer Problem](https://arxiv.org/abs/1309.4507)
