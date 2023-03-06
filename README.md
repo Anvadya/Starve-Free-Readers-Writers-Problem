@@ -293,7 +293,7 @@ The `R/W semaphores` provide us with two major benefits:
 * It provides us with a clean and user friendly way of acieving our goals of mutual exclusion and starvation.This reduces the chance of mistakes at the programmer's end.
 * The implementation of `R/W semaphores` is highly optimised for performance and thus will almost always give better running times than the programmer implemented solution.
 
-Hence, the most optimised code for solving the `Readers-Writers Problem` without starvation is obtained by using the `RW semaphores`.
+Hence, the most optimised code for solving the `Readers-Writers Problem` without starvation is obtained by using the `R/W semaphores`.
 
 These functions are provided as a part of the system call library provided by the OS.
 
