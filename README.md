@@ -223,7 +223,7 @@ void exitReader(pid reader){
   signal(read_mutex);
   //Freeing the read_mutex so other processes can do their work
   
-  if(count == 0) signal(write_mutex);
+  if(rCount == 0) signal(write_mutex);
   
   return;
 }
@@ -288,6 +288,12 @@ The Linux kernel provides following primary [API](https://en.wikipedia.org/wiki/
 * `void up_write(struct rw_semaphore *sem)` - release a write lock;
 
 Hence now the reader just need to call the `down_read` function before entering the critical section and call `up_read` after finishing its work in the critical section. Similarly, the writer needs to call the `down_write` function before entering its critical section and call the `up_write` function after exiting the critical section. The `down_read_trylock` returns whether the lock is available or not, in case the lock is unavailable the process might try doing some other work rather than going to a wait state on the `semaphore`, `down_write_trylock` achieves the same thing for the writers. 
+
+The `R/W semaphores` provide us with two major benefits:
+* It provides us with a clean and user friendly way of acieving our goals of mutual exclusion and starvation.This reduces the chance of mistakes at the programmer's end.
+* The implementation of `R/W semaphores` is highly optimised for performance and thus will almost always give better running times than the programmer implemented solution.
+
+Hence, the most optimised code for solving the `Readers-Writers Problem` without starvation is obtained by using the `RW semaphores`.
 
 These functions are provided as a part of the system call library provided by the OS.
 
